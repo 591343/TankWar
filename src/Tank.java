@@ -160,6 +160,7 @@ class Hero extends Tank{
 class EnemyTank extends Tank implements Runnable{
 	private int time=0; //控制敌方坦克发射一次子弹的间隔
 	private Vector<Bullet> bullets=new Vector<Bullet>();//给敌方添加子弹集合
+	private Vector<EnemyTank> ets=new Vector<EnemyTank>();//定义一个向量可以访问Mypanel上所有的坦克
 	public EnemyTank(int x,int y) {
 		super(x,y);
 	}
@@ -168,7 +169,137 @@ class EnemyTank extends Tank implements Runnable{
 		return bullets;
 	}
 	
-	@Override
+	public void setEts(Vector<EnemyTank> ets) {
+		this.ets=ets;
+	}
+	
+	
+	private  boolean isTouchOtherEnemy(){
+        boolean b = false;
+
+        switch (getDirect()) {
+        case 0:
+            //我的坦克向上
+            //取出所有的敌人坦克
+            for(int i=0;i<ets.size();i++){
+                //取出第一个坦克
+                EnemyTank et = ets.get(i);
+                //如果不是自己
+                if(et!=this){
+                    //如果敌人的方向是向下或者向上
+                    if(et.getDirect()==0||et.getDirect()==1){
+                        if(getX()>=et.getX()&&getX()<=et.getX()+20&&getY()>=et.getY()&&getY()<=et.getY()+30){
+                            return true;
+                        }
+                        if(getX()+20>=et.getX()&&getX()+20<=et.getX()+20&&getY()>=et.getY()&&getY()<=et.getY()+30){
+                            return true;
+                        }
+                    }
+                    if(et.getDirect()==3||et.getDirect()==2){
+                        if(getX()>=et.getX()&&getX()<=et.getX()+30&&getY()>=et.getY()&&getY()<=et.getY()+20){
+                            return true;
+                        }
+                        if(getX()+20>=et.getX()&&getX()+20<=et.getX()+30&&getY()>=et.getY()&&getY()<=et.getY()+20) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            break;
+        case 1:
+            //我的坦克向下
+            //取出所有的敌人坦克
+            for(int i=0;i<ets.size();i++){
+                //取出第一个坦克
+                EnemyTank et = ets.get(i);
+                //如果不是自己
+                if(et!=this){
+                    //如果敌人的方向是向下或者向上
+                    if(et.getDirect()==0||et.getDirect()==1){
+                        if(getX()>=et.getX()&&getX()<=et.getX()+20&&getY()+30>=et.getY()&&getY()+30<=et.getY()+30){
+                            return true;
+                        }
+                        if(getX()+20>=et.getX()&&getX()+20<=et.getX()+20&&getY()+30>=et.getY()&&getY()+30<=et.getY()+30){
+                            return true;
+                        }
+                    }
+                    if(et.getDirect()==3||et.getDirect()==2){
+                        if(getX()>=et.getX()&&getX()<=et.getX()+30&&getY()+30>=et.getY()&&getY()+30<=et.getY()+20){
+                            return true;
+                        }
+                        if(getX()+20>=et.getX()&&getX()+20<=et.getX()+30&&getY()+30>=et.getY()&&getY()+30<=et.getY()+20){
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            break;
+        case 2:
+            //我的坦克向左
+            //取出所有的敌人坦克
+            for(int i=0;i<ets.size();i++){
+                //取出第一个坦克
+                EnemyTank et = ets.get(i);
+                //如果不是自己
+                if(et!=this){
+                    //如果敌人的方向是向下或者向上
+                    if(et.getDirect()==0||et.getDirect()==1){
+                        if(getX()>=et.getX()&&getX()<=et.getX()+20&&getY()>=et.getY()&&getY()<=et.getY()+30){
+                            return true;
+                        }
+                        if(getX()>=et.getX()&&getX()<=et.getX()+20&&getY()+20>=et.getY()&&getY()+20<=et.getY()+30){
+                            return true;
+                        }
+                    }
+                    if(et.getDirect()==3||et.getDirect()==2){
+                        if(getX()>=et.getX()&&getX()<=et.getX()+30&&getY()>=et.getY()&&getY()<=et.getY()+20){
+                            return true;
+                        }
+                        if(getX()>=et.getX()&&getX()<=et.getX()+30&&getY()+20>=et.getY()&&getY()+20<=et.getY()+20){
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            break;
+        case 3:
+            //坦克向右
+            for(int i=0;i<ets.size();i++){
+                //取出第一个坦克
+                EnemyTank et = ets.get(i);
+                //如果不是自己
+                if(et!=this){
+                    //如果敌人的方向是向下或者向上
+                    if(et.getDirect()==0||et.getDirect()==1){
+                        if(getX()+30>=et.getX()&&getX()+30<=et.getX()+20&&getY()>=et.getY()&&getY()<=et.getY()+30){
+                            return true;
+                        }
+                        if(getX()+30>=et.getX()&&getX()+30<=et.getX()+20&&getY()+20>=et.getY()&&getY()+20<=et.getY()+30){
+                            return true;
+                        }
+                    }
+                    if(et.getDirect()==2||et.getDirect()==3){
+                        if(getX()+30>=et.getX()&&getX()+30<=et.getX()+30&&getY()>=et.getY()&&getY()<=et.getY()+20){
+                            return true;
+                        }
+                        if(getX()+30>=et.getX()&&getX()+30<=et.getX()+30&&getY()+20>=et.getY()&&getY()+20<=et.getY()+20){
+                            return true;
+                        }
+                    }
+                }
+            }
+            break;
+
+
+        default:
+            break;
+        }
+        return b;
+    }
+
+	
 	public void run() {
 		// TODO Auto-generated method stub
 	   while(true) {
@@ -180,7 +311,7 @@ class EnemyTank extends Tank implements Runnable{
 		   switch(getDirect()) {
 		   case 0://向上
 			   for(int i=0;i<3;i++) {
-				   if(getY()>0) {   //判断是否出边界
+				   if(getY()>0&&!isTouchOtherEnemy()) {   //判断是否出边界
 					     setY(getY()-getSpeed());
 					     try {
 					    	 Thread.sleep(200);//0.5秒
@@ -192,7 +323,7 @@ class EnemyTank extends Tank implements Runnable{
 			   break;
 		   case 1://向下
 			   for(int i=0;i<3;i++) {
-				   if(getY()<300) {   //判断是否出边界
+				   if(getY()<300&&!isTouchOtherEnemy()) {   //判断是否出边界
 					     setY(getY()+getSpeed());
 					     try {
 					    	 Thread.sleep(200);//0.5秒
@@ -204,7 +335,7 @@ class EnemyTank extends Tank implements Runnable{
 			   break;
 		   case 2://向左
 			   for(int i=0;i<3;i++) {
-				   if(getX()>0) {   //判断是否出边界
+				   if(getX()>0&&!isTouchOtherEnemy()) {   //判断是否出边界
 					     setX(getX()-getSpeed());
 					     try {
 					    	 Thread.sleep(200);//0.5秒
@@ -216,7 +347,7 @@ class EnemyTank extends Tank implements Runnable{
 			   break;
 		   case 3://向右
 			   for(int i=0;i<3;i++) {
-				   if(getX()<400) {   //判断是否出边界
+				   if(getX()<400&&!isTouchOtherEnemy()) {   //判断是否出边界
 					     setX(getX()+getSpeed());
 					     try {
 					    	 Thread.sleep(200);//0.5秒

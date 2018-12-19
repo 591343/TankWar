@@ -1,3 +1,4 @@
+
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Font;
@@ -24,11 +25,19 @@ import java.awt.image.BufferedImageOp;
 import java.awt.image.ImageObserver;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.RenderableImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.text.AttributedCharacterIterator;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
+
 
 /*
  * 面板
@@ -40,6 +49,7 @@ import javax.swing.JPanel;
 * 
 * 封装性：将坦克封装到方法中。
 * 
+* 转块像素统一为25X25
 */
 
 @SuppressWarnings("serial")
@@ -48,18 +58,27 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	 private Hero hero=null;//我方坦克
 	 private Vector<EnemyTank> enemies=new Vector<EnemyTank>();//敌方坦克
 	 private Vector<Boom> bombs=new Vector<Boom>();//定义炸弹集合
-	 private int enSize=3;//敌方坦克上限数量
+	 private final int enSize=3;//敌方坦克上限数量
 	 private Vector<Image> blasts=new Vector<Image>();//爆炸图片集合
 	 private boolean flag=true;//预先加载炸弹防止第一次击打坦克不出现爆炸效果
+	 private Vector<IronBirck> irons=new Vector<IronBirck>();//铁墙集合
+	 private Vector<GrassBrick> grasses=new Vector<GrassBrick>();//草地集合
+	 private Vector<RedBrick> walls=new Vector<RedBrick>();//砖墙集合
+
+	 private final int bircks=5;//砖块数
+	 
 	
 	 
 	 MyPanel() {
 		// TODO Auto-generated constructor stub
 		hero=new Hero(200,150);//设置坦克出现的位置
 		for(int i=0;i<enSize;i++) {
-			EnemyTank et=new EnemyTank((i+1)*80,0 );
+			EnemyTank et=new EnemyTank((i+1)*30,0 );
 			et.setDirect(1);//方向向下
 			et.setColor(0);//设置为青色
+			
+			et.setEts(enemies);//将敌方坦克交过去进行碰撞判断
+			
 			//启动敌人坦克线程
 			Thread t=new Thread(et);
 			t.start();
@@ -73,13 +92,28 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 			
 			enemies.add(et);//添加坦克
 		}
+		//初始化铁块
 		
+		for(int i=0;i<bircks;i++) {
+			IronBirck iron=new IronBirck(i*25,100);
+			irons.add(iron);
+			
+		}
+		for(int i=0;i<bircks;i++) {
+			GrassBrick grass=new GrassBrick(i*25,125);
+			grasses.add(grass);
+			
+		}
+		for(int i=0;i<bircks;i++) {
+			RedBrick wall=new RedBrick(i*25,150);
+			walls.add(wall);
+			
+		}
 		//初始化爆炸图片
 		for(int i=1;i<=8;i++) {
 		  Image image=null;
 		   image=Toolkit.getDefaultToolkit().createImage(MyPanel.class.getResource("blast"+i+".gif"));
-		   blasts.add(image);//将爆炸图片添加进去
-		   
+		   blasts.add(image);//将爆炸图片添加进集合
 		}
 
 	}
@@ -87,11 +121,17 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	@Override
     public  void paintComponent(Graphics g) {
 		// TODO Auto-generated method stub
+		
 		super.paintComponent(g);
+		g.setColor(Color.black);
 		g.fillRect(0, 0, 400, 300);//绘制实心矩形默认为黑色
 		
 		//画出我方坦克
+		//System.out.println(hero.getLive());
+		
 		drawTank(hero.getX(),hero.getY(),g,hero.getDirect(),1);
+		drawBrick(g);
+
 		
 		//画出子弹
 		for(int i=0;i<hero.getBullets().size();i++) {
@@ -165,13 +205,30 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 			
 		}
 	  }
+	
+		
+		
+		
 	}
 	
 	/*画坦克
 	 * type为坦克类型
 	 * direc为坦克方向
 	 */
-     
+	
+    //画出各种砖块
+	public void drawBrick(Graphics g) {
+		for(int i=0;i<irons.size();i++)
+		g.drawImage(IronBirck.getImage(),irons.get(i).getX(),irons.get(i).getY(),25,25,this);
+		
+		for(int i=0;i<grasses.size();i++)
+			g.drawImage(GrassBrick.getImage(),grasses.get(i).getX(),grasses.get(i).getY(),25,25,this);
+		for(int i=0;i<walls.size();i++)
+			if(walls.get(i).getLife()>0)
+			g.drawImage(RedBrick.getImage(),walls.get(i).getX(),walls.get(i).getY(),25,25,this);
+	}
+	
+	//画出我方坦克
 	public  void drawTank(int x,int y,Graphics g,int direc,int type) {
 		switch(type) {
 		case 0:
@@ -223,6 +280,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	}
 	
 	
+	//击中
 	
 	//击中我方坦克判断
 	private void hitMyTank() {
@@ -236,10 +294,73 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
     			Bullet bullet=et.getBullets().get(j);
     			hitTank(bullet,hero);//进行判断是否击中我方坦克
     			
+    			
     		}
     			
     	 }
 	}
+	
+	//判断我方是否击中砖块
+	private void myHitBrick() {
+		for(int i=0;i<hero.getBullets().size();i++) {
+		 Bullet bullet=hero.getBullets().get(i);
+		 if(bullet.isBuLive()) {
+			 hitBrick(bullet);
+		 }
+		 		 
+		}
+		
+	}
+	//判断敌方是否击中砖块
+	private void enemHitBrick() {
+		for(int i=0;i<enemies.size();i++) {
+			EnemyTank et=enemies.get(i);
+			for(int j=0;j<et.getBullets().size();j++) {
+				Bullet bullet=et.getBullets().get(j);
+				if(bullet.isBuLive())
+				hitBrick(bullet);
+			}
+		}
+	}
+	
+	//判断子弹是否击中砖块
+	private  void hitBrick(Bullet s) {
+		
+		//铁墙碰撞判断
+		boolean flag=true;
+       //一发子弹只能选中一块砖墙
+			//铁墙碰撞判断
+		if(flag)
+		for(int i=0;i<irons.size();i++) {
+			IronBirck iron=irons.get(i);
+			if(s.getX()>iron.getX()&&s.getX()<iron.getX()+25&&s.getY()>iron.getY()&&s.getY()<iron.getY()+25) {//击中
+				//击中子弹死亡
+				s.setBuLive(false);
+				flag=false;
+				break;
+				
+			}
+		}
+		
+		   //砖墙碰撞判断
+		if(flag) {
+		for(int i=0;i<walls.size();i++) {
+			RedBrick wall=walls.get(i);
+			if(wall.getLife()>0&&s.getX()>wall.getX()&&s.getX()<wall.getX()+25&&s.getY()>wall.getY()&&s.getY()<wall.getY()+25) {//击中
+				//击中子弹死亡
+				s.setBuLive(false);
+				System.out.println(wall.getLife());
+			    wall.setLife(wall.getLife()-1);//如果被击中生命减1
+			 
+				break;
+			}
+		  
+		}
+	  }
+	}
+		
+			
+				
 	
 	//判断子弹是否击中坦克
 	private  void hitTank(Bullet s,Tank tank) {
@@ -365,11 +486,31 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
     		 e.printStackTrace();
     	 }
     	 
+    	 myHitBrick();
+    	 enemHitBrick();
+    	 
     	 hitEnemyTank();
     	 hitMyTank();
+    	 
     	
+    	if(hero.getLive()) {//如果我方坦克存活就继续画
     	 repaint();
-        }
-      } 
-	
- }
+    	}
+    	 else {
+    		 int res=JOptionPane.showConfirmDialog(null, "再来一次?", "GameOver",JOptionPane.YES_NO_OPTION);
+             if(res==JOptionPane.YES_OPTION){ 
+                 System.out.println("选择是后执行的代码");    //点击“是”后执行这个代码块
+             }else{
+                 System.exit(0);    //退出游戏
+                 return;
+             }
+    	
+    
+    	 }
+    	
+    }
+       
+   }
+  } 
+   
+ 
