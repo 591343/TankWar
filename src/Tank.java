@@ -323,7 +323,7 @@ class EnemyTank extends Tank implements Runnable{
 			   break;
 		   case 1://向下
 			   for(int i=0;i<3;i++) {
-				   if(getY()<300&&!isTouchOtherEnemy()) {   //判断是否出边界
+				   if(getY()<240&&!isTouchOtherEnemy()) {   //判断是否出边界
 					     setY(getY()+getSpeed());
 					     try {
 					    	 Thread.sleep(200);//0.5秒
@@ -347,7 +347,7 @@ class EnemyTank extends Tank implements Runnable{
 			   break;
 		   case 3://向右
 			   for(int i=0;i<3;i++) {
-				   if(getX()<400&&!isTouchOtherEnemy()) {   //判断是否出边界
+				   if(getX()<360&&!isTouchOtherEnemy()) {   //判断是否出边界
 					     setX(getX()+getSpeed());
 					     try {
 					    	 Thread.sleep(200);//0.5秒

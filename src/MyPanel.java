@@ -58,14 +58,17 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	 private Hero hero=null;//我方坦克
 	 private Vector<EnemyTank> enemies=new Vector<EnemyTank>();//敌方坦克
 	 private Vector<Boom> bombs=new Vector<Boom>();//定义炸弹集合
-	 private final int enSize=3;//敌方坦克上限数量
+	 private final int enSize=8;//敌方坦克上限数量
 	 private Vector<Image> blasts=new Vector<Image>();//爆炸图片集合
 	 private boolean flag=true;//预先加载炸弹防止第一次击打坦克不出现爆炸效果
 	 private Vector<IronBirck> irons=new Vector<IronBirck>();//铁墙集合
 	 private Vector<GrassBrick> grasses=new Vector<GrassBrick>();//草地集合
 	 private Vector<RedBrick> walls=new Vector<RedBrick>();//砖墙集合
+	 private MainFrot frot;
 
-	 private final int bircks=5;//砖块数
+	 private final int ironBircks=14;//铁砖块数
+	 private final int wallBircks=6;//砖墙块数
+	 private final int grassBircks=6;//草地块数
 	 
 	
 	 
@@ -83,32 +86,45 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 			Thread t=new Thread(et);
 			t.start();
 			
-			//给敌人添加子弹
-			Bullet bullet=new Bullet(et.getX()+9,et.getY(), 1);
+			//给敌人添加子弹,删掉这段是避免出现图形刚出来就被击中扣血的BUG
+			/*Bullet bullet=new Bullet(et.getX()+9,et.getY(), 1);
 			et.getBullets().add(bullet);
 			Thread t2=new Thread(bullet);
-			t2.start();
+			t2.start();*/
 
 			
 			enemies.add(et);//添加坦克
 		}
-		//初始化铁块
 		
-		for(int i=0;i<bircks;i++) {
-			IronBirck iron=new IronBirck(i*25,100);
-			irons.add(iron);
+		//初始化铁块
+		int j=0;
+		for(int i=0;i<ironBircks;i++) {
+			IronBirck iron;
 			
+			if(i<ironBircks/2)
+			 iron=new IronBirck(100,(i+2)*25);
+			else {
+		     iron=new IronBirck(275,(j+2)*25);
+		     j++;
+			}
+			
+			irons.add(iron);
 		}
-		for(int i=0;i<bircks;i++) {
-			GrassBrick grass=new GrassBrick(i*25,125);
+		
+		for(int i=0;i<grassBircks;i++) {
+			GrassBrick grass;
+		    grass=new GrassBrick(125+i*25,75);
 			grasses.add(grass);
 			
 		}
-		for(int i=0;i<bircks;i++) {
-			RedBrick wall=new RedBrick(i*25,150);
-			walls.add(wall);
-			
+		
+		for(int i=0;i<wallBircks;i++) {
+			RedBrick wall=new RedBrick(125+i*25,125);
+			walls.add(wall);	
 		}
+		
+		//初始化基地
+		frot=new MainFrot(185,230);
 		//初始化爆炸图片
 		for(int i=1;i<=8;i++) {
 		  Image image=null;
@@ -226,6 +242,9 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		for(int i=0;i<walls.size();i++)
 			if(walls.get(i).getLife()>0)
 			g.drawImage(RedBrick.getImage(),walls.get(i).getX(),walls.get(i).getY(),25,25,this);
+		//画出基地
+		if(frot.getLife()>0)
+		g.drawImage(MainFrot.getImage(), frot.getX(), frot.getY(), this);
 	}
 	
 	//画出我方坦克
@@ -315,6 +334,8 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	private void enemHitBrick() {
 		for(int i=0;i<enemies.size();i++) {
 			EnemyTank et=enemies.get(i);
+			
+			if(et.getLive())
 			for(int j=0;j<et.getBullets().size();j++) {
 				Bullet bullet=et.getBullets().get(j);
 				if(bullet.isBuLive())
@@ -330,34 +351,39 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		boolean flag=true;
        //一发子弹只能选中一块砖墙
 			//铁墙碰撞判断
+			
 		if(flag)
 		for(int i=0;i<irons.size();i++) {
 			IronBirck iron=irons.get(i);
 			if(s.getX()>iron.getX()&&s.getX()<iron.getX()+25&&s.getY()>iron.getY()&&s.getY()<iron.getY()+25) {//击中
 				//击中子弹死亡
 				s.setBuLive(false);
-				flag=false;
 				break;
-				
 			}
+			
 		}
 		
-		   //砖墙碰撞判断
-		if(flag) {
+	    if(flag)
 		for(int i=0;i<walls.size();i++) {
 			RedBrick wall=walls.get(i);
 			if(wall.getLife()>0&&s.getX()>wall.getX()&&s.getX()<wall.getX()+25&&s.getY()>wall.getY()&&s.getY()<wall.getY()+25) {//击中
 				//击中子弹死亡
 				s.setBuLive(false);
-				System.out.println(wall.getLife());
+				
 			    wall.setLife(wall.getLife()-1);//如果被击中生命减1
-			 
-				break;
+			    break;
 			}
-		  
+			
 		}
-	  }
+	    
+	    if(flag)
+	    	if(frot.getLife()>0&&s.getX()>frot.getX()&&s.getX()<frot.getX()+30&&s.getY()>frot.getY()&&s.getY()<frot.getY()+30) {
+	    		s.setBuLive(false);
+	    		frot.setLife(frot.getLife()-1);//中弹基地生命减一
+	    	}
+		
 	}
+	
 		
 			
 				
@@ -429,22 +455,188 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
     	 }
 	}
 	
+	
+	
+	
+	//我方碰撞砖块检测
+	public void myTouchBrick() {
+		touchBrick(hero);
+	}
+	
+	//敌人碰撞砖块检测
+	public void enemyTouchBrick() {
+		for(int i=0;i<enemies.size();i++) {//取出每一个敌方坦克进行碰撞测试
+			EnemyTank et=enemies.get(i);
+			
+			if(et.getLive())
+			touchBrick(et);
+		}
+	}
+	
+	//坦克砖块碰撞检测
+	public void touchBrick(Tank tank) {
+		boolean flag=true;
+		final int x=tank.getX()+tank.getSpeed();//记录坦克接下来位置
+		final int y=tank.getY()+tank.getSpeed();
+		
+		final int x1=tank.getX()-tank.getSpeed();//同上
+		final int y1=tank.getY()-tank.getSpeed();
+		
+		switch(tank.getDirect()) {
+		
+		case 0://上
+			
+			if(flag) {        //碰撞铁块检测
+				for(int i=0;i<irons.size();i++) {
+					IronBirck iron=irons.get(i);
+					if(tank.getX()>iron.getX()-20&&tank.getX()+20<iron.getX()+45&&y1>iron.getY()&&y1<iron.getY()+25) {
+						tank.setY(tank.getY()+tank.getSpeed());
+						flag=false;
+						break;
+					   }
+				}
+			}
+			   
+			if(flag) {       //碰撞砖墙检测
+				for(int i=0;i<walls.size();i++) {
+					RedBrick wall=walls.get(i);
+					if(wall.getLife()>0&&tank.getX()>wall.getX()-20&&tank.getX()+20<wall.getX()+45&&y1>wall.getY()&&y1<wall.getY()+25) {
+						tank.setY(tank.getY()+tank.getSpeed());
+					
+						break;
+						
+					}	
+				}
+			}
+			
+			break;
+			
+		case 1://下
+			if(flag) {        //碰撞铁块检测
+				 
+				for(int i=0;i<irons.size();i++) {
+					IronBirck iron=irons.get(i);
+					if(tank.getX()>iron.getX()-20&&tank.getX()+20<iron.getX()+45&&y+30>iron.getY()&&y+30<iron.getY()+25) {
+						tank.setY(tank.getY()-tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
+	   
+			if(flag) {       //碰撞砖墙检测
+				for(int i=0;i<walls.size();i++) {
+					RedBrick wall=walls.get(i);
+					if(wall.getLife()>0&&tank.getX()>wall.getX()-20&&tank.getX()<wall.getX()+45&&y+30>wall.getY()&&y+30<wall.getY()+25) {
+						tank.setY(tank.getY()-tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
+			if(flag) {
+				if(frot.getLife()>0&&tank.getX()>frot.getX()-20&&tank.getX()+20<frot.getX()+50&&y+30>frot.getY()&&y+30<frot.getY()+30) {
+					tank.setY(tank.getY()-tank.getSpeed());
+					break;
+				}
+			}
+				break;
+				
+		case 2://左
+			
+			if(flag) {        //碰撞铁块检测
+			   
+				for(int i=0;i<irons.size();i++) {
+					IronBirck iron=irons.get(i);
+					if(x1>iron.getX()&&x1<iron.getX()+25&&tank.getY()>iron.getY()-25&&tank.getY()+20<iron.getY()+45) {
+						tank.setX(tank.getX()+tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
+	   
+			if(flag) {       //碰撞砖墙检测
+				for(int i=0;i<walls.size();i++) {
+					RedBrick wall=walls.get(i);
+					if(wall.getLife()>0&&x1>wall.getX()&&x1<wall.getX()+25&&tank.getY()>wall.getY()-25&&tank.getY()+20<wall.getY()+45) {
+						tank.setX(tank.getX()+tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
+			
+			if(flag) {
+				if(frot.getLife()>0&&x1>frot.getX()&&x1<frot.getX()+30&&tank.getY()>frot.getY()-30&&tank.getY()+20<frot.getY()+50) {
+					tank.setX(tank.getX()+tank.getSpeed());
+					break;
+				}
+			}
+			break;
+		case 3://右
+			if(flag) {        //碰撞铁块检测
+				
+				for(int i=0;i<irons.size();i++) {
+					IronBirck iron=irons.get(i);
+					if(x+30>iron.getX()&&x+30<iron.getX()+25&&tank.getY()>iron.getY()-25&&tank.getY()+20<iron.getY()+45) {
+						tank.setX(tank.getX()-tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
+	   
+			if(flag) {       //碰撞砖墙检测
+				for(int i=0;i<walls.size();i++) {
+					RedBrick wall=walls.get(i);
+					if(wall.getLife()>0&&x+30>wall.getX()&&x+30<wall.getX()+25&&tank.getY()>wall.getY()-25&&tank.getY()+20<wall.getY()+45) {
+						tank.setX(tank.getX()-tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
+			
+			if(flag) {
+					if(frot.getLife()>0&&x+30>frot.getX()&&x+30<frot.getX()+30&&tank.getY()>frot.getY()-30&&tank.getY()+20<frot.getY()+50) {
+						tank.setX(tank.getX()-tank.getSpeed());
+						break;
+					}
+			}
+			
+			break;
+			
+		default:
+			
+			break;
+		}
+	}
+	
 	// 按下某个键时调用此方法。
 	@Override
 	public void keyPressed(KeyEvent e) 	{
 		// TODO Auto-generated method stub
 		if(e.getKeyCode()==KeyEvent.VK_W) {
 			hero.setDirect(0);//向上
+			 myTouchBrick();//将这个函数放在每个按键响应里面解决连续按键我方坦克冲破砖块和连续撞墙BUG
 			hero.moveUp();
+			
 		}else if(e.getKeyCode()==KeyEvent.VK_S) {
 			hero.setDirect(1);//向下
+			 myTouchBrick();
 			hero.moveDown();
+		
 		}else if(e.getKeyCode()==KeyEvent.VK_A) {
 			hero.setDirect(2);//向左
+			 myTouchBrick();
 			hero.moveLeft();
+			
 		}else if(e.getKeyCode()==KeyEvent.VK_D) {
 			hero.setDirect(3);//向右
+			 myTouchBrick();
 			hero.moveRight();
+			
 		}
 		if(e.getKeyCode()==KeyEvent.VK_J) {
 			 	//开火
@@ -486,11 +678,19 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
     		 e.printStackTrace();
     	 }
     	 
-    	 myHitBrick();
-    	 enemHitBrick();
     	 
     	 hitEnemyTank();
     	 hitMyTank();
+    	 
+    
+    	 enemyTouchBrick();
+    	 
+    	 enemHitBrick();
+    	 myHitBrick();
+    	 
+    	
+    	 
+    
     	 
     	
     	if(hero.getLive()) {//如果我方坦克存活就继续画
@@ -499,7 +699,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
     	 else {
     		 int res=JOptionPane.showConfirmDialog(null, "再来一次?", "GameOver",JOptionPane.YES_NO_OPTION);
              if(res==JOptionPane.YES_OPTION){ 
-                 System.out.println("选择是后执行的代码");    //点击“是”后执行这个代码块
+                
              }else{
                  System.exit(0);    //退出游戏
                  return;

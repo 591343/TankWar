@@ -8,8 +8,8 @@ import javax.swing.JPanel;
 
 /**
  * 
- * @author LENOVO
- *功能:坦克大战3.0
+ * @author ChenXiao
+ *功能:坦克大战1.0
  *目前已实现的功能
  *1.画出坦克
  *2.坦克的移动(W,S,A,D分别控制上下左右移动)
@@ -19,6 +19,10 @@ import javax.swing.JPanel;
  *6.使敌人可以攻击可以移动
  *7.坦克重叠BUG的修复
  *8.实现地图,敌我子弹和坦克碰撞检测
+ *9.画出基地
+ *10.坦克连续碰撞墙壁和穿墙BUG修复
+ *11.添加爆炸，子弹射出，游戏进行音效
+ *12.记分板(记录敌人坦克剩余数量，我方基地生命数，我得方的分数)
  */
 @SuppressWarnings("serial")
 public class TankBattle extends JFrame{
@@ -32,6 +36,7 @@ public class TankBattle extends JFrame{
 	   // setLocation(1000, 1000);
 		
 		p1=new MyPanel();
+		
 		
 	    setBounds(400, 250, 400, 300);
 	    setVisible(true);
