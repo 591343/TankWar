@@ -22,40 +22,56 @@ import javax.swing.JPanel;
  *9.画出基地
  *10.坦克连续碰撞墙壁和穿墙BUG修复
  *11.添加爆炸，子弹射出，游戏进行音效
- *12.记分板(记录敌人坦克剩余数量，我方基地生命数，我得方的分数)
+ *12.记分板(记录敌人坦克剩余数量，我方基地生命数，我得方的分数)  目前遗留一个BUG
+ *13.当基地血量为0时宣布游戏失败当敌人坦克死光后宣布游戏胜利
+ *
  */
 @SuppressWarnings("serial")
 public class TankBattle extends JFrame{
 
 	private  MyPanel p1=null;
+	private DataPanel p2=null;
 	//private Image image 
 
 	private Container container=getContentPane();
 	TankBattle() {
 		// TODO Auto-generated constructor stub
 	   // setLocation(1000, 1000);
-		
+		setTitle("坦克大战1.0");
+		 setLayout(new BorderLayout());
 		p1=new MyPanel();
+		p2=new DataPanel();
 		
-		
-	    setBounds(400, 250, 400, 300);
+		setBounds(400, 250,600, 300);
+		p1.setBounds(0,0,400, 300);
+		p2.setBounds(400,0,400,300);
+	    
+	   
 	    setVisible(true);
 	    setResizable(false);
-	    setLayout(new BorderLayout());
-	    container.add(p1,BorderLayout.CENTER);
+	   
+	  
+	    container.add(p1);
+  	    container.add(p2);
+		
+	 
 	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    
 	    //加载开始图片
 		Graphics p=getGraphics();
-    	p.drawImage(GameUtile.getImage("startgame .png"), 0, 0, this);
+    	p.drawImage(GameUtile.getImage("startfgame.png"), 0, 0, this);
+	    
     	
-    	
-	    int res=JOptionPane.showConfirmDialog(null, "开始游戏?", "TankBattle",JOptionPane.YES_NO_OPTION);
+        int res=JOptionPane.showConfirmDialog(null, "开始游戏?", "TankBattle",JOptionPane.YES_NO_OPTION);
         if(res==JOptionPane.YES_OPTION){ 
-        
-        	new Thread(new MP3Player()).start();//游戏声音加载
+        	  
+        	  new Thread(new MP3Player()).start();//游戏声音加载
         	  Thread t=new Thread(p1);
-      		 t.start();//运行该线程    //点击“是”后执行这个代码块
+        	  Thread t1=new Thread(p2);
+        	
+        	  t1.start();
+        	  t.start();
+        	  
       		 
         }else{
             System.exit(0);    //退出游戏
