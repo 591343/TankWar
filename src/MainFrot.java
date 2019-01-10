@@ -7,7 +7,7 @@ import java.awt.Image;
  */
 public class MainFrot extends  BasicBrick{
     private static Image headquarter;//基地图片
-    private int life=5;//基地生命
+    private int life=3;//基地生命
     
     
     public int  getLife() {

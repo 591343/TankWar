@@ -8,7 +8,7 @@ public class Bullet implements Runnable {
 	private int x;//子弹横坐标
 	private int y;//子弹纵坐标
 	private int driect;//子弹方向
-	private int speed=6;//子弹速度
+	private int speed=8;//子弹速度
 	private boolean isLive=true;//子弹跑出屏幕需要死亡，增加变量isLive判断是否存活。否则无限制飞行，不断占用内存空间
 	
 	

@@ -20,6 +20,10 @@ public class DataPanel extends JPanel implements Runnable {
     static JLabel blood=null;
     static JLabel myScore=null;
     
+    static {
+    	
+    }
+    
 	public DataPanel() {
 		// TODO Auto-generated constructor stub
 		this.setLayout(null);//使用绝对布局

@@ -302,9 +302,10 @@ class EnemyTank extends Tank implements Runnable{
 	
 	public void run() {
 		// TODO Auto-generated method stub
+		int count=0;
 	   while(true) {
 		   try {
-			   Thread.sleep(50);     //因为线程运行太快导致敌方坦克移动很快所以要休眠使其移动速度变慢
+			   Thread.sleep(0);     //因为线程运行太快导致敌方坦克移动很快所以要休眠使其移动速度变慢
 		   }catch(InterruptedException e){
 			   e.printStackTrace();
 		   }
@@ -399,8 +400,12 @@ class EnemyTank extends Tank implements Runnable{
 				   }
 			   }
 		   }
+		   if(count++==4) {
+		   setDirect((int)(Math.random()*4));
+		   count=0;
+		   }
 		   
-		   setDirect((int)(Math.random()*4));    //每次发射完一颗子弹后敌方坦克随机选个方向进行移动
+		   //每次发射完一颗子弹后敌方坦克随机选个方向进行移动
 		   
 		   //如果敌方坦克死亡就退出线程
 		   if(!getLive()) {

@@ -23,7 +23,7 @@ public class MP3Player implements Runnable{
     	}
 	}
     public void run() {
-           playRadio("D:/eclipse workspace/TankBattle/src/tankBattle.mp3");
+           playRadio("tankBattle.mp3");
     }
 
 }
@@ -32,14 +32,14 @@ public class MP3Player implements Runnable{
 class FirePlayer extends MP3Player{
 	
 	public void run() {
-	MP3Player.playRadio("D:/eclipse workspace/TankBattle/src/shot.mp3");	
+	MP3Player.playRadio("shot.mp3");	
 	}
 }
 
 //±¨’®“Ù–ß
 class BlastPlayer extends MP3Player{
 	public void run() {
-		MP3Player.playRadio("D:/eclipse workspace/TankBattle/src/boom.mp3");	
+		MP3Player.playRadio("boom.mp3");	
 		}
 }
 

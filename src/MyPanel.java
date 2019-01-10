@@ -59,92 +59,35 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	 private Hero hero=null;//我方坦克
 	 private Vector<EnemyTank> enemies=new Vector<EnemyTank>();//敌方坦克
 	 private Vector<Boom> bombs=new Vector<Boom>();//定义炸弹集合
-	 private final int enSize=8;//敌方坦克上限数量
+	 private final int enSize=10;//敌方坦克上限数量
 	 private Vector<Image> blasts=new Vector<Image>();//爆炸图片集合
 	 private boolean flag=true;//预先加载炸弹防止第一次击打坦克不出现爆炸效果
 	 private Vector<IronBirck> irons=new Vector<IronBirck>();//铁墙集合
 	 private Vector<GrassBrick> grasses=new Vector<GrassBrick>();//草地集合
 	 private Vector<RedBrick> walls=new Vector<RedBrick>();//砖墙集合
+	 private Vector<WaterBirck> waters=new Vector<WaterBirck>();//水墙集合
 	 private MainFrot frot;
-	 boolean MyPanelRun=true;
+	 private int roundCount=0;//回合计数
+	 private int nowTankNum=0;//当前坦克计数
+     private final int initTankNum=5;//初始坦克数
 
 
-	 private final int ironBircks=14;//铁砖块数
-	 private final int wallBircks=12;//砖墙块数
-	 private final int grassBircks=12;//草地块数
+	 private  int ironBircks=14;//铁砖块数
+	 private  int wallBircks=12;//砖墙块数
+	 private  int grassBircks=12;//草地块数
+	 private  int waterBircks=0;//水墙块数
 	 
 	
 	 
 	 MyPanel() {
 		// TODO Auto-generated constructor stub
-		hero=new Hero(165,230);//设置坦克出现的位置
-		for(int i=0;i<enSize;i++) {
-			EnemyTank et=new EnemyTank((i+1)*30,0 );
-			et.setDirect(1);//方向向下
-			et.setColor(0);//设置为青色
-			
-			et.setEts(enemies);//将敌方坦克交过去进行碰撞判断
-			
-			//启动敌人坦克线程
-			Thread t=new Thread(et);
-			t.start();
-			
-			//给敌人添加子弹,删掉这段是避免出现图形刚出来就被击中扣血的BUG
-			/*Bullet bullet=new Bullet(et.getX()+9,et.getY(), 1);
-			et.getBullets().add(bullet);
-			Thread t2=new Thread(bullet);
-			t2.start();*/
-
-			
-			enemies.add(et);//添加坦克
-		}
-		//初始化敌人个数
-		DataPanel.surplusNum=enSize;
+		hero=new Hero(165,230);//设置我方坦克出现的位置
 		
-		//初始化铁块
-		int j=0;
-		for(int i=0;i<ironBircks;i++) {
-			IronBirck iron;
-			
-			if(i<ironBircks/2)
-			 iron=new IronBirck(100,(i+2)*25);
-			else {
-		     iron=new IronBirck(275,(j+2)*25);
-		     j++;
-			}
-			
-			irons.add(iron);
-		}
+		InitEnemyTank();//初始化敌人坦克
+		InitMainFrot();//初始化基地
+		InitMap();//初始化地图
+	
 		
-		//初始化草地
-		j=0;
-		for(int i=0;i<grassBircks;i++) {
-			GrassBrick grass;
-			if(i<grassBircks/2)
-		    grass=new GrassBrick(125+i*25,75);
-			else {
-			grass=new GrassBrick(125+j*25,100);
-			j++;
-			}
-			grasses.add(grass);
-			
-		}
-		
-		//出始化砖墙
-		j=0;
-		for(int i=0;i<wallBircks;i++) {
-			RedBrick wall;
-			if(i<wallBircks/2)
-			wall=new RedBrick(125+i*25,125);
-			else {
-			wall=new RedBrick(125+j*25,150);
-			j++;
-			}
-			walls.add(wall);	
-		}
-		
-		//初始化基地
-		frot=new MainFrot(185,230);
 		//初始化爆炸图片
 		for(int i=1;i<=8;i++) {
 		  Image image=null;
@@ -152,10 +95,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		   blasts.add(image);//将爆炸图片添加进集合
 		}
 		
-		//数据面板数据初始化
-		DataPanel.surplusFrot=frot.getLife();
-		DataPanel.surplusNum=enemies.size();
-
+		
 	}
 	
 	@Override
@@ -168,8 +108,11 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		
 		//画出我方坦克
 		//System.out.println(hero.getLive());
-		
+		if(hero.getLive())
 		drawTank(hero.getX(),hero.getY(),g,hero.getDirect(),1);
+		//如果砖块没有被打掉就不重新画
+		
+		
 		drawBrick(g);
 
 		
@@ -188,43 +131,41 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		
 		}
 		
-		//画出炸弹
-		
-	    for(int i=0;i<bombs.size();i++) {
-	    	Boom b=bombs.get(i);	
-	    	
-	    	
-	    	
-	    	new Thread(new BlastPlayer()).start();//坦克爆炸音效
-	    	if(b.getLife()>8) {
-	    		g.drawImage(blasts.get(0), b.getX(), b.getY(), 30, 30, this);
-	    		
-	    	}else if(b.getLife()>7) {
-	    		g.drawImage(blasts.get(1), b.getX(), b.getY(), 30, 30, this);
-	    	}else if(b.getLife()>6) {
-	    		g.drawImage(blasts.get(2), b.getX(), b.getY(), 30, 30, this);
-	    	}else if(b.getLife()>5) {
-	    		g.drawImage(blasts.get(3), b.getX(), b.getY(), 30, 30, this);
-	    	}else if(b.getLife()>4) {
-	    		g.drawImage(blasts.get(4), b.getX(), b.getY(), 30, 30, this);
-	    	}else if(b.getLife()>3) {
-	    		g.drawImage(blasts.get(5), b.getX(), b.getY(), 30, 30, this);
-	    	}else if(b.getLife()>2) {
-	    		g.drawImage(blasts.get(6), b.getX(), b.getY(), 30, 30, this);
-	    	}else if(b.getLife()>1) {
-	    		g.drawImage(blasts.get(7), b.getX(), b.getY(), 30, 30, this);
-	    	}
-	    	
-	    	
-	    	
-	    	b.lifeDown();
-	    	
-	    	if(b.getLife()==0) {
-	    		bombs.remove(b);
-	    	}
-	    	
-	    	
-	    }
+		 for(int i=0;i<bombs.size();i++) {
+		    	Boom b=bombs.get(i);	
+		    	
+		    	
+		    	
+		    	new Thread(new BlastPlayer()).start();//坦克爆炸音效
+		    	if(b.getLife()>8) {
+		    		g.drawImage(blasts.get(0), b.getX(), b.getY(), 30, 30, this);
+		    		
+		    	}else if(b.getLife()>7) {
+		    		g.drawImage(blasts.get(1), b.getX(), b.getY(), 30, 30, this);
+		    	}else if(b.getLife()>6) {
+		    		g.drawImage(blasts.get(2), b.getX(), b.getY(), 30, 30, this);
+		    	}else if(b.getLife()>5) {
+		    		g.drawImage(blasts.get(3), b.getX(), b.getY(), 30, 30, this);
+		    	}else if(b.getLife()>4) {
+		    		g.drawImage(blasts.get(4), b.getX(), b.getY(), 30, 30, this);
+		    	}else if(b.getLife()>3) {
+		    		g.drawImage(blasts.get(5), b.getX(), b.getY(), 30, 30, this);
+		    	}else if(b.getLife()>2) {
+		    		g.drawImage(blasts.get(6), b.getX(), b.getY(), 30, 30, this);
+		    	}else if(b.getLife()>1) {
+		    		g.drawImage(blasts.get(7), b.getX(), b.getY(), 30, 30, this);
+		    	}
+		    	
+		    	
+		    	
+		    	b.lifeDown();
+		    	
+		    	if(b.getLife()==0) {
+		    		bombs.remove(b);
+		    	}
+		    	
+		    	
+		    }
 	
 		//画出敌方坦克
 			
@@ -268,9 +209,13 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		for(int i=0;i<walls.size();i++)
 			if(walls.get(i).getLife()>0)
 			g.drawImage(RedBrick.getImage(),walls.get(i).getX(),walls.get(i).getY(),25,25,this);
+		for(int i=0;i<waters.size();i++)
+			g.drawImage(WaterBirck.getImage(), waters.get(i).getX(),waters.get(i).getY(),25,25,this);
 		//画出基地
 		if(frot.getLife()>0)
 		g.drawImage(MainFrot.getImage(), frot.getX(), frot.getY(), this);
+		
+		
 	}
 	
 	//画出我方坦克
@@ -397,7 +342,6 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 				s.setBuLive(false);
 				
 			    wall.setLife(wall.getLife()-1);//如果被击中生命减1
-			   
 			    break;
 			}
 			
@@ -416,8 +360,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		
 	}
 	
-		
-			
+
 				
 	
 	//判断子弹是否击中坦克
@@ -440,8 +383,12 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 				
 				Boom b=new Boom(tank.getX(),tank.getY());//
 				bombs.add(b);//加入爆炸效果
+				if(tank.getColor()==0)//如果击中的是敌方坦克
+					nowTankNum--;
+				if(hero.getLive()) {
 				DataPanel.setSurplusNum(DataPanel.surplusNum-1);
 				DataPanel.setScore(DataPanel.score+20);
+				}
 				
 			}
 			break;
@@ -460,8 +407,13 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 				tank.setLive(false);
 				Boom b=new Boom(tank.getX(),tank.getY());//
 				bombs.add(b);//加入爆炸效果
+				if(tank.getColor()==0) {
+				   nowTankNum--;
+				}
+				if(hero.getLive()) {
 				DataPanel.setSurplusNum(DataPanel.surplusNum-1);
 				DataPanel.setScore(DataPanel.score+20);
+				}
 				
 			}
 			break;
@@ -537,10 +489,29 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 					RedBrick wall=walls.get(i);
 					if(wall.getLife()>0&&tank.getX()>wall.getX()-20&&tank.getX()+20<wall.getX()+45&&y1>wall.getY()&&y1<wall.getY()+25) {
 						tank.setY(tank.getY()+tank.getSpeed());
-					
+					    flag=false;
 						break;
 						
 					}	
+				}
+			 }
+			
+			if(flag) {    //碰撞水墙检测
+				for(int i=0;i<waters.size();i++) {
+					WaterBirck water=waters.get(i);
+					if(tank.getX()>water.getX()-20&&tank.getX()+20<water.getX()+45&&y1>water.getY()&&y1<water.getY()+25) {
+						tank.setY(tank.getY()+tank.getSpeed());
+					    flag=false;
+						break;
+						
+					}	
+				}
+			}
+			
+			if(flag) {
+				if(frot.getLife()>0&&tank.getX()>frot.getX()-20&&tank.getX()+20<frot.getX()+50&&y+30>frot.getY()&&y+30<frot.getY()+30) {
+					tank.setY(tank.getY()-tank.getSpeed());
+					break;
 				}
 			}
 			
@@ -562,13 +533,26 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 			if(flag) {       //碰撞砖墙检测
 				for(int i=0;i<walls.size();i++) {
 					RedBrick wall=walls.get(i);
-					if(wall.getLife()>0&&tank.getX()>wall.getX()-20&&tank.getX()<wall.getX()+45&&y+30>wall.getY()&&y+30<wall.getY()+25) {
+					if(wall.getLife()>0&&tank.getX()>wall.getX()-20&&tank.getX()+20<wall.getX()+45&&y+30>wall.getY()&&y+30<wall.getY()+25) {
 						tank.setY(tank.getY()-tank.getSpeed());
 						flag=false;
 						break;
 					}
 				}
 			}
+			
+			if(flag) {       //碰撞水墙检测
+				for(int i=0;i<waters.size();i++) {
+					WaterBirck water=waters.get(i);
+					if(tank.getX()>water.getX()-20&&tank.getX()<water.getX()+45&&y+30>water.getY()&&y+30<water.getY()+25) {
+						tank.setY(tank.getY()-tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
+			
+			
 			if(flag) {
 				if(frot.getLife()>0&&tank.getX()>frot.getX()-20&&tank.getX()+20<frot.getX()+50&&y+30>frot.getY()&&y+30<frot.getY()+30) {
 					tank.setY(tank.getY()-tank.getSpeed());
@@ -595,6 +579,17 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 				for(int i=0;i<walls.size();i++) {
 					RedBrick wall=walls.get(i);
 					if(wall.getLife()>0&&x1>wall.getX()&&x1<wall.getX()+25&&tank.getY()>wall.getY()-25&&tank.getY()+20<wall.getY()+45) {
+						tank.setX(tank.getX()+tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
+			
+			if(flag) {       //碰撞水墙检测
+				for(int i=0;i<waters.size();i++) {
+					WaterBirck water=waters.get(i);
+					if(x1>water.getX()&&x1<water.getX()+25&&tank.getY()>water.getY()-25&&tank.getY()+20<water.getY()+45) {
 						tank.setX(tank.getX()+tank.getSpeed());
 						flag=false;
 						break;
@@ -633,6 +628,16 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 				}
 			}
 			
+			if(flag) {       //碰撞水墙检测
+				for(int i=0;i<waters.size();i++) {
+					WaterBirck water=waters.get(i);
+					if(x+30>water.getX()&&x+30<water.getX()+25&&tank.getY()>water.getY()-25&&tank.getY()+20<water.getY()+45) {
+						tank.setX(tank.getX()-tank.getSpeed());
+						flag=false;
+						break;
+					}
+				}
+			}
 			if(flag) {
 					if(frot.getLife()>0&&x+30>frot.getX()&&x+30<frot.getX()+30&&tank.getY()>frot.getY()-30&&tank.getY()+20<frot.getY()+50) {
 						tank.setX(tank.getX()-tank.getSpeed());
@@ -676,7 +681,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		if(e.getKeyCode()==KeyEvent.VK_J) {
 			 	//开火
 			//如果子弹不存在可以再此发射
-		    if(hero.getBullets().size()<1) {
+		    if(hero.getBullets().size()<4) {
 		    	new Thread(new FirePlayer()).start();//射击子弹音效
 			hero.shotEnemy();
 		   }
@@ -686,7 +691,195 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		 
 	}
 	
+	//第二关 
+	private void Second() {
+		InitData();//初始化数据
+		grassBircks=30;
+		wallBircks=28;
+		waterBircks=12;
+		ironBircks=6;
+		//初始化铁块
+		int j=0;
+		for(int i=0;i<ironBircks;i++) {
+			IronBirck iron;
+			
+			if(i<ironBircks/2)
+			 iron=new IronBirck(125,i*25+100);
+			else {
+		     iron=new IronBirck(250,j*25+100);
+		     j++;
+			}
+			
+			irons.add(iron);
+		}
+		
+		//初始化草地
+		j=0;
+		for(int i=0;i<grassBircks;i++) {
+			GrassBrick grass;
+			if(i<grassBircks/2)
+		    grass=new GrassBrick(0,i*25);
+			else {
+			grass=new GrassBrick(375,j*25);
+			j++;
+			}
+			grasses.add(grass);
+			
+		}
+		
+		//出始化砖墙
+		j=0;
+		for(int i=0;i<wallBircks;i++) {
+			RedBrick wall;
+			if(i<wallBircks/2)
+			wall=new RedBrick(25+i*25,75);
+			else {
+			wall=new RedBrick(25+j*25,175);
+			j++;
+			}
+			walls.add(wall);	
+		}
+		
+		//初始化水墙
+		j=0;
+		for(int i=0;i<waterBircks;i++) {
+			WaterBirck water;
+			if(i<3) {
+				water=new WaterBirck(150,j*25+100);
+			}
+			else if(i>=3&&i<6) {
+				water=new WaterBirck(175,j*25+100);
+			}
+			else if(i>=6&&i<9) {
+				water=new WaterBirck(200,j*25+100);
+			}
+			else {
+				water=new WaterBirck(225,j*25+100);
+			}
+			
+			if(j++==2) {
+				j=0;
+			}
+			waters.add(water);
+		}
+		
+	}
 	
+	//初始化敌方坦克
+	private void InitEnemyTank() { 
+		for(int i=0;i<initTankNum;i++) {
+			EnemyTank et=new EnemyTank((i+1)*50,0 );
+			et.setDirect(1);//方向向下
+			et.setColor(0);//设置为青色
+			
+			et.setEts(enemies);//将敌方坦克交过去进行碰撞判断
+			
+			//启动敌人坦克线程
+			Thread t=new Thread(et);
+			t.start();
+			
+			//给敌人添加子弹,删掉这段是避免出现图形刚出来就被击中扣血的BUG
+			/*Bullet bullet=new Bullet(et.getX()+9,et.getY(), 1);
+			et.getBullets().add(bullet);
+			Thread t2=new Thread(bullet);
+			t2.start();*/
+
+			
+			enemies.add(et);//添加坦克
+			nowTankNum=enemies.size();
+		}
+	}
+	
+	private void InitMainFrot() { 
+		//初始化基地
+		frot=new MainFrot(185,230);
+				
+		//数据面板数据初始化
+		DataPanel.surplusFrot=frot.getLife();
+		//初始化敌人个数
+		DataPanel.surplusNum=enSize;
+		
+		
+
+	}
+	
+	//初始化地图
+	private void InitMap() {
+		//初始化铁块
+				int j=0;
+				for(int i=0;i<ironBircks;i++) {
+					IronBirck iron;
+					
+					if(i<ironBircks/2)
+					 iron=new IronBirck(100,(i+2)*25);
+					else {
+				     iron=new IronBirck(275,(j+2)*25);
+				     j++;
+					}
+					
+					irons.add(iron);
+				}
+				
+				//初始化草地
+				j=0;
+				for(int i=0;i<grassBircks;i++) {
+					GrassBrick grass;
+					if(i<grassBircks/2)
+				    grass=new GrassBrick(125+i*25,75);
+					else {
+					grass=new GrassBrick(125+j*25,100);
+					j++;
+					}
+					grasses.add(grass);
+					
+				}
+				
+				//出始化砖墙
+				j=0;
+				for(int i=0;i<wallBircks;i++) {
+					RedBrick wall;
+					if(i<wallBircks/2)
+					wall=new RedBrick(125+i*25,125);
+					else {
+					wall=new RedBrick(125+j*25,150);
+					j++;
+					}
+					walls.add(wall);	
+				}
+				
+	}
+	
+	//初始化数据
+	private void InitData() {
+		
+		  
+		 
+		hero.setX(165);
+		hero.setY(230);
+		hero.setDirect(0);
+		irons.removeAllElements();
+		grasses.removeAllElements();
+		walls.removeAllElements();
+		waters.removeAllElements();
+		enemies.removeAllElements();
+		InitEnemyTank();
+		InitMainFrot();
+		
+	}
+	
+	//重新开始游戏
+	private void reGame() {
+		 hero.setLive(true);//设置我方坦克存活
+		 hero.setDirect(0);//设置方向为上
+		 roundCount=0;//回合数置零
+		 ironBircks=14;//铁砖块数
+		 wallBircks=12;//砖墙块数
+         grassBircks=12;//草地块数
+         DataPanel.score=0;
+         InitData();
+         InitMap();
+		
+	}
 	//   键入某个键时调用此方法。
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -707,7 +900,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
    //重华子弹
    public void run() {
 	// TODO Auto-generated method stub
-       while(MyPanelRun) {
+       while(true) {
     	 try {
     		 Thread.sleep(100);
     	 }catch(InterruptedException e) {
@@ -724,24 +917,57 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
     	 enemHitBrick();
     	 myHitBrick();
     	 
-    	//如果敌人都死亡则我方胜利
-       if(DataPanel.surplusNum==0) {
-       		 repaint();//
-           	 JOptionPane.showMessageDialog(this, "得分"+DataPanel.score, "You Win!!!",JOptionPane.INFORMATION_MESSAGE);
-                System.exit(0);//退出游戏
-       	}
-    	 
-       //如果我方活着或者母堡血量大于0则继续
-    	if(hero.getLive()&&frot.getLife()>0) {//如果我方坦克存活就继续画
-    	 repaint();
-    	}
-    
-    	else {
-    	 repaint();//基地血为0时不画基地
-    	 JOptionPane.showMessageDialog(this, "得分"+DataPanel.score, "GameOver",JOptionPane.INFORMATION_MESSAGE);
-         System.exit(0);//退出游戏
-        }
+       //使一个敌人死亡后还能随机的在任意一个敌方出现敌人
+       if(nowTankNum!=initTankNum&&DataPanel.surplusNum>=initTankNum) {
+    	   EnemyTank et=new EnemyTank((int)(Math.random()*250),0 );
+    	    et.setDirect(1);//方向向下
+			et.setColor(0);//设置为青色
+		
+			et.setEts(enemies);//将敌方坦克交过去进行碰撞判断
+			
+			//启动敌人坦克线程
+			Thread t=new Thread(et);
+			t.start();
+			enemies.add(et);
+			nowTankNum++;   
+       }
        
+       
+    	//如果敌人都死亡则我方胜利
+       if(DataPanel.surplusNum==0&&roundCount==0) {
+       		 repaint();
+       		 if(bombs.size()==0) {//避免出现到第二关才画前一关的炸弹
+       		 JOptionPane.showMessageDialog(this, "第一关累计得分"+DataPanel.score, "第二关",JOptionPane.INFORMATION_MESSAGE);
+           	 Second();       
+           	 roundCount++;}
+       	}
+       
+       //当两关都通过时退出游戏
+       else if(roundCount!=0&&DataPanel.surplusNum==0) {
+    	   if(bombs.size()==0) {
+    	    JOptionPane.showMessageDialog(this, "总得分"+DataPanel.score, "You Win!!!",JOptionPane.INFORMATION_MESSAGE);
+    	    String name=TankBattle.name;
+    	    int score=DataPanel.score;
+    	    new Conndatum().addData(name,score);//添加得分数据到数据库
+    	    System.exit(0);//结束游戏
+    	    }
+       }
+    	
+       //我方坦克死亡或者基地血量为0
+       if(!hero.getLive()||frot.getLife()<=0) {
+    	   if(bombs.size()==0) {
+    	   int res=JOptionPane.showConfirmDialog(this, "\t 重新开始?","GameOver",JOptionPane.YES_NO_OPTION);
+    	   if(res==JOptionPane.YES_OPTION) {
+    		 reGame();//重新开始游戏  
+    	   }
+    	   else {
+    		  
+    		   System.exit(0);
+    	   }
+    	}
+       }
+       
+       repaint();
    }
   } 
 }
