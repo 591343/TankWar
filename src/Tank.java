@@ -2,15 +2,16 @@ import java.util.Random;
 import java.util.Vector;
 
 
-
 /**
  * 
  * @author LENOVO
  *坦克父类 可以设置坦克出现的位置
  */
 
+
+
 public class Tank {
-    private  int x=0;//默认位置
+    private  int x=0;//默认
     private  int y=0;
     private  int speed =5;//移动速度
     private  int direct=0;//移动方向
@@ -158,6 +159,11 @@ class Hero extends Tank{
  * 敌方坦克
  */
 class EnemyTank extends Tank implements Runnable{
+	private int le=140;  //敌方坦克的搜索范围
+	
+	
+	
+	
 	private int time=0; //控制敌方坦克发射一次子弹的间隔
 	private Vector<Bullet> bullets=new Vector<Bullet>();//给敌方添加子弹集合
 	private Vector<EnemyTank> ets=new Vector<EnemyTank>();//定义一个向量可以访问Mypanel上所有的坦克
@@ -303,12 +309,17 @@ class EnemyTank extends Tank implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		int count=0;
+		Random r=new Random();
+		int flag=r.nextInt(2);    //随机生成两个方向的其中一个方向
 	   while(true) {
 		   try {
 			   Thread.sleep(0);     //因为线程运行太快导致敌方坦克移动很快所以要休眠使其移动速度变慢
 		   }catch(InterruptedException e){
 			   e.printStackTrace();
 		   }
+		
+		   
+		if(MyPanel.hx<getX()-le||MyPanel.hx>getX()+le||MyPanel.hy<getY()-le||MyPanel.hy>getY()+le) {   
 		   switch(getDirect()) {
 		   case 0://向上
 			   for(int i=0;i<3;i++) {
@@ -363,7 +374,142 @@ class EnemyTank extends Tank implements Runnable{
 			   
 			   break;
 		   }
-		   
+		   if(count++==4) {
+			   setDirect((int)(Math.random()*4));
+			   count=0;
+			   }
+		}
+		
+		//穿墙失败
+		/*else if(MyPanel.touchBrick(this)) {      
+			if(getDirect()==0) {
+				if(getX()>180) {
+					moveRight();
+				}
+				else {
+					moveLeft();
+				}
+			}
+			else if(getDirect()==1) {
+				if(getX()>180) {
+					moveRight();
+				}
+				else {
+					moveLeft();
+				}
+			}
+			else if(getDirect()==2) {
+				if(getY()>120) {
+					moveUp();
+				}
+				else {
+					moveDown();
+				}
+			}
+			else if(getDirect()==3) {
+				if(getY()>120) {
+					moveUp();
+				}
+				else {
+					moveDown();
+				}
+			}
+			try {
+		    	 Thread.sleep(300);//0.5秒
+		     }catch(InterruptedException e) {
+		    	 e.printStackTrace();
+		     }
+		}*/
+		
+		else {
+			
+			if(MyPanel.hx<getX()&&MyPanel.hy<getY()) {
+				/*if(MyPanel.hx<getX()-20) {             //先朝一个方向移动，目标进入范围后转向另一个方向。
+					setDirect(2);
+					 moveLeft();
+				}
+				else if(MyPanel.hx>=getX()-20&&MyPanel.hx<=getX()+20){
+					setDirect(0);
+					 moveUp();
+				}*/
+				if(flag==0) {                          //随机选择一个方向进行移动
+					setDirect(2);
+					if(!isTouchOtherEnemy()) moveLeft();
+					if(MyPanel.touchBrick(this)||isTouchOtherEnemy()) {    //如果撞墙，直接转变方向。
+						flag=r.nextInt(2);
+					}
+				}
+				else if(flag==1) {
+					setDirect(0);
+					if(!isTouchOtherEnemy())  moveUp();
+					 if(MyPanel.touchBrick(this)||isTouchOtherEnemy()) {   
+						 flag=r.nextInt(2);
+					}
+				}
+				if(count++==4) {
+					flag=r.nextInt(2);
+					count=0;
+				}
+				
+			}
+			else if(MyPanel.hx>getX()&&MyPanel.hy<getY()) {
+				if(flag==0) {
+					setDirect(3);
+					if(!isTouchOtherEnemy()) moveRight();
+					 if(MyPanel.touchBrick(this)||isTouchOtherEnemy()) {   
+						 flag=r.nextInt(2);
+					}
+				}
+				
+				else if(flag==1){
+					setDirect(0);
+					if(!isTouchOtherEnemy()) moveUp();
+					 if(MyPanel.touchBrick(this)||isTouchOtherEnemy()) {   
+						 flag=r.nextInt(2);
+					}
+				}
+				
+			
+			}
+			else if(MyPanel.hx<getX()&&MyPanel.hy>getY()) {
+				if(flag==0) {
+					setDirect(2);
+					if(!isTouchOtherEnemy()) moveLeft();
+					 if(MyPanel.touchBrick(this)||isTouchOtherEnemy()) {   
+						 flag=r.nextInt(2);
+					}
+				}
+				else if(flag==1){
+					setDirect(1);
+					if(!isTouchOtherEnemy()) moveDown();
+					 if(MyPanel.touchBrick(this)||isTouchOtherEnemy()) {   
+						 flag=r.nextInt(2);
+					}
+				}
+				
+			}
+			else {
+				if(flag==0) {
+					setDirect(3);
+					if(!isTouchOtherEnemy()) moveRight();
+					if(MyPanel.touchBrick(this)||isTouchOtherEnemy()) {   
+						flag=r.nextInt(2);
+					}
+				}
+				else if(flag==1){
+					setDirect(1);
+					if(!isTouchOtherEnemy()) moveDown();
+					 if(MyPanel.touchBrick(this)||isTouchOtherEnemy()) {   
+						 flag=r.nextInt(2);
+					}
+				}
+			}
+			try {
+		    	 Thread.sleep(300);//0.5秒
+		     }catch(InterruptedException e) {
+		    	 e.printStackTrace();
+		     }
+		}
 		   time++;//规定每3s发射一颗子弹
 		   if(time%2==0) {
 			   if(getLive()) {
@@ -400,10 +546,10 @@ class EnemyTank extends Tank implements Runnable{
 				   }
 			   }
 		   }
-		   if(count++==4) {
+		  /* if(count++==4) {
 		   setDirect((int)(Math.random()*4));
 		   count=0;
-		   }
+		   }*/
 		   
 		   //每次发射完一颗子弹后敌方坦克随机选个方向进行移动
 		   
@@ -412,8 +558,5 @@ class EnemyTank extends Tank implements Runnable{
 			   break;
 		   }
 	   }
-	}
-	
-	
-	
+	}	
 }

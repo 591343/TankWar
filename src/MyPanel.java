@@ -59,17 +59,17 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	 private Hero hero=null;//我方坦克
 	 private Vector<EnemyTank> enemies=new Vector<EnemyTank>();//敌方坦克
 	 private Vector<Boom> bombs=new Vector<Boom>();//定义炸弹集合
-	 private final int enSize=10;//敌方坦克上限数量
+	 private final int enSize=3;//敌方坦克上限数量
 	 private Vector<Image> blasts=new Vector<Image>();//爆炸图片集合
 	 private boolean flag=true;//预先加载炸弹防止第一次击打坦克不出现爆炸效果
-	 private Vector<IronBirck> irons=new Vector<IronBirck>();//铁墙集合
+	 private static Vector<IronBirck> irons=new Vector<IronBirck>();//铁墙集合
 	 private Vector<GrassBrick> grasses=new Vector<GrassBrick>();//草地集合
-	 private Vector<RedBrick> walls=new Vector<RedBrick>();//砖墙集合
-	 private Vector<WaterBirck> waters=new Vector<WaterBirck>();//水墙集合
-	 private MainFrot frot;
+	 private static Vector<RedBrick> walls=new Vector<RedBrick>();//砖墙集合
+	 private static Vector<WaterBirck> waters=new Vector<WaterBirck>();//水墙集合
+	 private static MainFrot frot;
 	 private int roundCount=0;//回合计数
 	 private int nowTankNum=0;//当前坦克计数
-     private final int initTankNum=5;//初始坦克数
+     private final int initTankNum=2;//初始坦克数
 
 
 	 private  int ironBircks=14;//铁砖块数
@@ -77,11 +77,15 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	 private  int grassBircks=12;//草地块数
 	 private  int waterBircks=0;//水墙块数
 	 
-	
+	public static int hx;
+	public static int hy;
 	 
 	 MyPanel() {
 		// TODO Auto-generated constructor stub
 		hero=new Hero(165,230);//设置我方坦克出现的位置
+		hx=165;
+		hy=230;
+		
 		
 		InitEnemyTank();//初始化敌人坦克
 		InitMainFrot();//初始化基地
@@ -136,7 +140,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 		    	
 		    	
 		    	
-		    	new Thread(new BlastPlayer()).start();//坦克爆炸音效
+		       new Thread(new BlastPlayer()).start();//坦克爆炸音效
 		    	if(b.getLife()>8) {
 		    		g.drawImage(blasts.get(0), b.getX(), b.getY(), 30, 30, this);
 		    		
@@ -461,7 +465,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 	}
 	
 	//坦克砖块碰撞检测
-	public void touchBrick(Tank tank) {
+	public static boolean touchBrick(Tank tank){
 		boolean flag=true;
 		final int x=tank.getX()+tank.getSpeed();//记录坦克接下来位置
 		final int y=tank.getY()+tank.getSpeed();
@@ -651,6 +655,7 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 			
 			break;
 		}
+		return true;
 	}
 	
 	// 按下某个键时调用此方法。
@@ -661,22 +666,25 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
 			hero.setDirect(0);//向上
 			 myTouchBrick();//将这个函数放在每个按键响应里面解决连续按键我方坦克冲破砖块和连续撞墙BUG
 			hero.moveUp();
+			hy=hero.getY();
 			
 		}else if(e.getKeyCode()==KeyEvent.VK_S) {
 			hero.setDirect(1);//向下
 			 myTouchBrick();
 			hero.moveDown();
+			hy=hero.getY();
 		
 		}else if(e.getKeyCode()==KeyEvent.VK_A) {
 			hero.setDirect(2);//向左
 			 myTouchBrick();
 			hero.moveLeft();
+			hx=hero.getX();
 			
 		}else if(e.getKeyCode()==KeyEvent.VK_D) {
 			hero.setDirect(3);//向右
 			 myTouchBrick();
 			hero.moveRight();
-			
+			hx=hero.getX();
 		}
 		if(e.getKeyCode()==KeyEvent.VK_J) {
 			 	//开火
@@ -946,9 +954,10 @@ class MyPanel extends JPanel implements KeyListener,Runnable {
        else if(roundCount!=0&&DataPanel.surplusNum==0) {
     	   if(bombs.size()==0) {
     	    JOptionPane.showMessageDialog(this, "总得分"+DataPanel.score, "You Win!!!",JOptionPane.INFORMATION_MESSAGE);
-    	    String name=TankBattle.name;
-    	    int score=DataPanel.score;
-    	    new Conndatum().addData(name,score);//添加得分数据到数据库
+    	    //String name=DataPanel.name;//保存玩家昵称
+    	    //int score=DataPanel.score;
+    	    DataPanel.overTime=(System.currentTimeMillis()-TankBattle.startTime)/1000;
+    	    new Conndatum().addData(DataPanel.name,DataPanel.score,DataPanel.overTime);//添加得分数据到数据库
     	    System.exit(0);//结束游戏
     	    }
        }

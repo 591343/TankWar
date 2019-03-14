@@ -26,15 +26,16 @@ public class Conndatum {//创建类Conn
     }
     
     
-    public void addData(String name,int score) {
+    public void addData(String name,int score,long time) {
     	Integer a=score;
     	String scoreW=a.toString();
-    
+        Integer b=(int) time;
+        String passtime=b.toString();
     	con=getConnection();//调用连接数据库的方法
     	try {
-    		sql=con.prepareStatement("select * from tb_score");//查询数据库
+    		sql=con.prepareStatement("select * from tb_score ");//查询数据库
     		res=sql.executeQuery();//执行SQL语句
-    		sql=con.prepareStatement("insert into tb_score (name,score) values('"+name+"','"+scoreW+"')");
+    		sql=con.prepareStatement("insert into tb_score (name,score,passtime) values('"+name+"','"+scoreW+"','"+passtime+"')");
     		
     		
     		sql.executeUpdate();//执行更新
@@ -49,17 +50,20 @@ public class Conndatum {//创建类Conn
 	   con=getConnection();//调用连接数据库的方法
 	   rank=new ScoreRank();
 	   try {
-			sql=con.prepareStatement("select * from tb_score");//查询数据库
+			sql=con.prepareStatement("select * from  tb_score order by passtime");//查询数据库
     		res=sql.executeQuery();//执行SQL语句
-    		rank.rankArea.append("Id\tName\tScore\n");
+    		rank.rankArea.append("\t     坦克大战排行榜\n");
+    		rank.rankArea.append("Id\tName\tScore\tPassTime\n");
     		while(res.next()) {
     			int id=res.getInt(1);
         		String name=res.getString("name");
         		String score=res.getString("score");
+        		String passtime=res.getString("passtime");
         		//System.out.println(id+name+score);
-    			rank.rankArea.append(id+"\t"+name+"\t"+score+"\n");
+    			rank.rankArea.append(id+"\t"+name+"\t"+score+"\t"+passtime+"S"+"\n");
     		
     		}
+    		res.close();
     		    rank.init();//排行榜初始化
 	   }catch (Exception e) {
 		// TODO: handle exception
@@ -67,6 +71,11 @@ public class Conndatum {//创建类Conn
 		   System.out.println("ass");
 	}
 	  
+   }
+   
+   public void shutRank() {
+	   //强行关闭窗口
+	  rank.dispose();
    }
     
  
